@@ -1,10 +1,14 @@
 package pers.wuliang.robot
 
+import kotlinx.coroutines.runBlocking
+import net.mamoe.mirai.Bot
 import net.mamoe.mirai.BotFactory
 import net.mamoe.mirai.auth.BotAuthorization
 import net.mamoe.mirai.utils.BotConfiguration
 import net.mamoe.mirai.utils.BotConfiguration.*
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.PropertySource
 import org.springframework.stereotype.Component
 import pers.wuliang.robot.eventListen.MyEventHandlers
@@ -18,6 +22,7 @@ import pers.wuliang.robot.eventListen.MyEventHandlers
  */
 @Component
 @PropertySource("classpath:bot.properties")
+@Configuration
 class QQBot {
     @Value("\${bot.account}")
     final val qq: Long = 0
@@ -25,11 +30,13 @@ class QQBot {
     /**
      * 启动BOT
      */
-    suspend fun startBot() {
+    @Bean
+     fun startBot():Bot {
         val bot = BotFactory.newBot(qq, BotAuthorization.byQRCode()) {
             fileBasedDeviceInfo()
             protocol = BotConfiguration.MiraiProtocol.ANDROID_WATCH
         }
-        bot.login()
+        runBlocking { bot.login() }
+        return  bot
     }
 }
