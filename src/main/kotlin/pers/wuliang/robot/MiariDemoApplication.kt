@@ -1,6 +1,7 @@
 package pers.wuliang.robot
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
 import org.springframework.context.ApplicationContext
 import pers.wuliang.robot.util.SpringUtil

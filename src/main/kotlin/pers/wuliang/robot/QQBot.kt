@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.PropertySource
 import org.springframework.stereotype.Component
-import pers.wuliang.robot.eventListen.MyEventHandlers
 
 
 /**

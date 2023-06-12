@@ -1,4 +1,3 @@
-
 package pers.wuliang.robot.config
 
 import cn.hutool.core.util.ClassUtil
@@ -184,26 +183,28 @@ class MiraiEventListenerConfiguration(
 
     }
 
+    /**
+     * 解析string中的{key,value}，并将其替换为正则表达式
+     */
     fun String.parseReg(): String {
-        // 解析string中的{key,value}，并将其替换为正则表达式
         val builder = StringBuilder()
-        this.split("{").withIndex().forEach { (index, str) ->
-            if (index == 0) { builder.append(str); return@forEach }
+        split("{").forEachIndexed { index, str ->
+            if (index == 0) {
+                builder.append(str)
+                return@forEachIndexed
+            }
             val strList = str.split("}")
-            when (strList.size) {
-                1 -> builder.append(str)
-                2 -> {
-                    val pattern = strList[0].split(",")
-                    when (pattern.size) {
-                        1 -> builder.append("(?<${pattern[0]}>.*?)")
-                        2 -> {
-                            builder.append("(?<${pattern[0]}>${pattern[1].replaceGroupNoCapture()})")
-                        }
-                    }
-
+            println("strList：$strList")
+            if (strList.size == 1) {
+                builder.append(str)
+            } else {
+                val pattern = strList[0].split(",")
+                when (pattern.size) {
+                    1 -> builder.append("(?<${pattern[0]}>.*?)")
+                    2 -> builder.append("(?<${pattern[0]}>${pattern[1].replaceGroupNoCapture()})")
                 }
             }
-
+            builder.append(strList[1])
         }
 
         return builder.toString()

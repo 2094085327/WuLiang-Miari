@@ -1,0 +1,10 @@
+logging:
+  level:
+    love.forte: Info
+
+spring:
+  profiles.active: dev
+
+server:
+  port: 9600
+
