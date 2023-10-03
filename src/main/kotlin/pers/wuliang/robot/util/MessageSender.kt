@@ -4,6 +4,9 @@ import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.MessageReceipt
 import net.mamoe.mirai.message.data.*
+//import net.mamoe.mirai.message.data.MessageSource.Key.recall
+//import net.mamoe.mirai.message.data.MessageSource.Key.recallIn
+//import pers.wuliang.robot.util.MessageSender.recall
 
 /**
  *@Description:
@@ -23,6 +26,11 @@ object MessageSender {
 
     suspend fun MessageEvent.reply(message: MessageChain): MessageReceipt<Contact> = this.send(QuoteReply(message))
 
-    suspend fun MessageEvent.reply(message: String): MessageReceipt<Contact> = this.send(QuoteReply(messageChainOf(PlainText(message))))
+    suspend fun MessageEvent.reply(message: String): MessageReceipt<Contact> =
+        this.send(messageChainOf(QuoteReply(this.source), PlainText(message)))
+
+//    suspend fun  MessageEvent.recall() = this.source.recall()
+//    suspend fun MessageEvent.recall(time:Long)= this.source.recallIn(time)
+
 
 }

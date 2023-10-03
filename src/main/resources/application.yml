@@ -1,6 +1,8 @@
 logging:
   level:
     love.forte: Info
+    org.apache.http: error
+    httpclient.wire: error
 
 spring:
   profiles.active: dev

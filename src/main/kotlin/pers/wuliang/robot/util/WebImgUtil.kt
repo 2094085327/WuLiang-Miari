@@ -10,24 +10,25 @@ import org.springframework.context.annotation.PropertySource
 import org.springframework.stereotype.Component
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.io.File
 import javax.imageio.IIOImage
 import javax.imageio.ImageIO
 import javax.imageio.ImageWriteParam
 
 /**
- *@Description:
+ *@Description: 进行浏览器绘图的主要工具类
  *@Author zeng
  *@Date 2023/6/11 15:05
  *@User 86188
  */
 @Component
 @PropertySource("classpath:config.properties")
+@PropertySource("classpath:application.yml")
 @Configuration
-class WebImgUtil {
+open class WebImgUtil {
     companion object {
         var driverPath: String = ""
         var defaultPath: String = ""
+        var usePort: String = ""
     }
 
     @Value("\${webImg.driverPath}")
@@ -40,10 +41,16 @@ class WebImgUtil {
         defaultPath = path
     }
 
-    fun getImg(url: String, imgPath: String? = null, width: Int, height: Int, sleepTime: Long = 0): ByteArray {
+    @Value("\${server.port}")
+    fun setPort(port: String) {
+        usePort = port
+    }
 
-//        System.setProperty("webdriver.chrome.driver", driverPath)
+    fun getImg(url: String, width: Int? = null, height: Int? = null, sleepTime: Long = 0): ByteArray {
+
         WebDriverManager.chromedriver().setup()
+        println(WebDriverManager.chromedriver().downloadedDriverPath)
+        println(WebDriverManager.chromedriver().downloadedDriverVersion)
         val options = ChromeOptions()
         options.addArguments("--remote-allow-origins=*")
         options.addArguments("--headless")
@@ -59,11 +66,13 @@ class WebImgUtil {
 
         val widths = driver.executeScript("return document.documentElement.scrollWidth") as Long
         val heights = driver.executeScript("return document.documentElement.scrollHeight") as Long
-        println("高度：$height 宽度：$width")
+        println("高度：$heights 宽度：$widths")
 
+        val actualWidth = width ?: widths.toInt()
+        val actualHeight = height ?: heights.toInt()
 
         // 设置窗口大小
-        driver.manage().window().size = org.openqa.selenium.Dimension(widths.toInt(), heights.toInt())
+        driver.manage().window().size = org.openqa.selenium.Dimension(actualWidth, actualHeight)
 
         // 等待页面加载完成
         Thread.sleep(sleepTime)

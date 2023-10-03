@@ -35,16 +35,18 @@ class GetGeoApi {
         return code == "200"
     }
 
-    fun getCityData(city: String): String? {
+    fun getCityData(city: String): String {
         val url = "https://geoapi.qweather.com/v2/city/lookup?location=$city&key=${key}"
         val json = HttpUtil.doGetJson(url)
         GeoData.cityJson = json
+
+        print(json)
         return json["code"].textValue()
     }
 
-    fun getWeatherData(city: String): String? {
+    fun getWeatherData(city: String): String {
         val cityCode = getCityData(city)
-        if (!checkCode(cityCode!!)) return cityCode
+        if (!checkCode(cityCode)) return cityCode
         val dailyCode = getDailyInfo(city)
         if (!checkCode(dailyCode!!)) return dailyCode
         val perCode = getPreWeather()

@@ -2,20 +2,23 @@ package pers.wuliang.robot.common.utils
 
 import cn.hutool.extra.spring.SpringUtil
 import com.fasterxml.jackson.databind.JsonNode
-import org.apache.http.Header
-import org.apache.http.HttpEntity
-import org.apache.http.HttpHost
-import org.apache.http.client.methods.HttpGet
-import org.apache.http.client.methods.HttpPost
-import org.apache.http.client.methods.HttpRequestBase
-import org.apache.http.client.utils.URIBuilder
-import org.apache.http.impl.client.CloseableHttpClient
-import org.apache.http.impl.client.HttpClients
-import org.apache.http.util.EntityUtils
+import org.apache.hc.client5.http.classic.methods.HttpGet
+import org.apache.hc.client5.http.classic.methods.HttpPost
+import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder
+import org.apache.hc.client5.http.impl.classic.HttpClients
+import org.apache.hc.core5.http.Header
+import org.apache.hc.core5.http.HttpEntity
+import org.apache.hc.core5.http.HttpHost
+import org.apache.hc.core5.http.io.entity.EntityUtils
+import org.apache.hc.core5.http.message.BasicHeader
+import org.apache.hc.core5.net.URIBuilder
 import pers.wuliang.robot.common.utils.LoggerUtils.logInfo
 import java.io.IOException
 import java.net.URI
 import java.net.URLEncoder
+
 
 /**
  * @author zsck
@@ -26,96 +29,106 @@ import java.net.URLEncoder
  * 公共的http请求工具类
  */
 @Suppress("unused")
-object HttpUtil: HttpBase(){
-    override fun isDefault(): Boolean {
+object HttpUtil : HttpBase() {
+    fun isDefault(): Boolean {
         return false
     }
 }
+
 @Suppress("unused")
-open class HttpBase{
+open class HttpBase {
 
     protected open val httpClient: CloseableHttpClient = HttpClients.createDefault()
 
 
     @Throws(IOException::class)
-    fun doGetStr(url: String, header: Array<Header>? = getHeader(), params: Map<String, Any>? = null, isDefault: Boolean = isDefault()): String {
+    fun doGetStr(url: String, header: MutableMap<String, Any>?=null, params: Map<String, Any>? = null, isDefault: Boolean = false): String {
         val httpGet = HttpGet(getUri(url, params))
-        httpGet.setHeaders(header)
+        header?.map { (key, value) -> httpGet.setHeader(key, value.toString())  }
         return doHttpRequestStr(httpGet, isDefault)
     }
 
     @Throws(IOException::class)
-    fun doGetBytes(url: String, header: Array<Header>? = getHeader(), params: Map<String, Any>? = null, isDefault: Boolean = isDefault()): ByteArray {
-        val httpGet = HttpGet( getUri(url, params) )
+    fun doGetBytes(
+        url: String,
+        header: Header,
+        params: Map<String, Any>? = null,
+        isDefault: Boolean = false
+    ): ByteArray {
+        val httpGet = HttpGet(getUri(url, params))
         httpGet.setHeaders(header)
         return doHttpRequestBytes(httpGet, isDefault)
     }
 
     @Throws(IOException::class)
-    fun doPostStr(url: String, entity: HttpEntity? = null, header: Array<Header>? = getHeader(), isDefault: Boolean = isDefault()): String {
+    fun doPostStr(url: String, entity: HttpEntity? = null, header: MutableMap<String, Any>?=null, isDefault: Boolean = false): String {
         val httpPost = HttpPost(url)
-        httpPost.setHeaders(header)
+        header?.map { (key, value) -> httpPost.setHeader(key, value.toString())  }
         entity?.let { httpPost.entity = it }
         return doHttpRequestStr(httpPost, isDefault)
     }
 
     @Throws(IOException::class)
-    fun doGetJson(url: String, header: Array<Header>? = getHeader(), params: Map<String, Any>? = null, isDefault: Boolean = isDefault()): JsonNode {
+    fun doGetJson(url: String, header: MutableMap<String, Any>?=null, params: Map<String, Any>? = null, isDefault: Boolean = false): JsonNode {
         return JacksonUtil.readTree(doGetStr(url, header, params, isDefault))
     }
+
     @Throws(IOException::class)
-    fun doPostJson(url: String, entity: HttpEntity? = null, header: Array<Header>? = getHeader(), isDefault: Boolean = isDefault()): JsonNode {
+    fun doPostJson(url: String, entity: HttpEntity? = null, header: MutableMap<String, Any>?=null, isDefault: Boolean = false): JsonNode {
         return JacksonUtil.readTree(doPostStr(url, entity, header, isDefault))
     }
 
-    private fun doHttpRequestStr(httpRequestBase: HttpRequestBase, isDefault: Boolean = isDefault()): String{
-        val httpClient : CloseableHttpClient = if (isDefault) this.httpClient else HttpClients.createDefault()
+    private fun doHttpRequestStr(httpRequestBase: HttpUriRequestBase, isDefault: Boolean = false): String {
+        val httpClient: CloseableHttpClient = if (isDefault) this.httpClient else HttpClientBuilder.create().build()
         try {
             httpClient.execute(httpRequestBase).use { exec -> return EntityUtils.toString(exec.entity) }
-        }finally {//若不使用默认httpClient则自动关闭
-            if ( !isDefault ){
+        } finally {//若不使用默认httpClient则自动关闭
+            if (!isDefault) {
                 httpClient.close()
             }
         }
     }
-    private fun doHttpRequestBytes(httpRequestBase: HttpRequestBase, isDefault: Boolean = isDefault()): ByteArray{
-        val httpClient : CloseableHttpClient = if (isDefault) this.httpClient else HttpClients.createDefault()
+
+
+    private fun doHttpRequestBytes(httpRequestBase: HttpUriRequestBase, isDefault: Boolean = false): ByteArray {
+        val httpClient: CloseableHttpClient = if (isDefault) this.httpClient else HttpClients.createDefault()
         try {
             httpClient.execute(httpRequestBase).use { exec -> return EntityUtils.toByteArray(exec.entity) }
-        }finally {//若不使用默认httpClient则自动关闭
-            if ( !isDefault ){
+        } finally {//若不使用默认httpClient则自动关闭
+            if (!isDefault) {
                 httpClient.close()
             }
         }
     }
 
-    private fun getUri(url: String, params: Map<String, Any>? = null): URI {
-        val uriBuilder = URIBuilder(url)
-
-        params?.let {
-            it.forEach { (key, value) -> uriBuilder.addParameter(key, value.toString()) }
+    private fun getUri(url: String, params: Map<String, Any>?): String {
+        val uri = URI(url)
+        val encodedUrl = uri.toASCIIString()
+        val builder = URIBuilder(encodedUrl)
+        if (params != null) {
+            for ((key, value) in params) {
+                builder.addParameter(key, value as String?)
+            }
         }
-
-        return uriBuilder.build()
+        return builder.build().toString()
     }
 
 
 
-    /**
-     * 待子类重写
-     */
-    open fun getHeader(): Array<Header>?{
-        return null
-    }
-
-    open fun isDefault(): Boolean{
-        return true
-    }
+//    /**
+//     * 待子类重写
+//     */
+//    open fun getHeader(): Header{
+//        return null
+//    }
+//
+//    open fun isDefault(): Boolean{
+//        return true
+//    }
 }
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
-object HttpProxy: HttpBase(){
-
+object HttpProxy : HttpBase() {
 
 
     override lateinit var httpClient: CloseableHttpClient
@@ -129,7 +142,7 @@ object HttpProxy: HttpBase(){
         if (port == null || proxyAddress == null) {
             logInfo("HttpProxy init failed, port or proxyAddress is null")
             httpClient = HttpClients.createDefault()
-        }else{
+        } else {
             logInfo("HttpProxy init proxyAddress: {}, port: {}", proxyAddress, port)
 
 
@@ -144,6 +157,7 @@ object HttpProxy: HttpBase(){
     }
 
 }
+
 @Suppress("unused")
 object UrlUtil {
     fun String.urlEncode(charset: String = "UTF-8"): String {
@@ -159,4 +173,5 @@ object UrlUtil {
     }
 
 }
+
 

@@ -3,6 +3,8 @@ package pers.wuliang.robot.botApi.geography
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.RequestMapping
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  *@Description:
@@ -63,6 +65,44 @@ class GeoWeb {
         model.addAttribute("tempMax", "${tempMax}°C")
         model.addAttribute("tempMin", "${tempMin}°C")
 
+        return "Geography/Weather"
+    }
+
+    @RequestMapping("/geo")
+    fun addGeoInfo(model: Model): String {
+        val geoData = GetGeoApi().getGeoData()
+        val cityJson = geoData.cityJson!!
+        val currentTime = LocalDateTime.now()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-M-d H:m")
+        val formattedTime = currentTime.format(formatter)
+
+        val city = cityJson["location"][0]["name"].textValue()
+        val cityId = cityJson["location"][0]["id"].textValue()
+        var cityLon = cityJson["location"][0]["lon"].textValue().toFloat()
+        var cityLat = cityJson["location"][0]["lat"].textValue().toFloat()
+        var country = cityJson["location"][0]["country"].textValue()
+        val cityLonChange: String?
+        var cityLatChange: String? = null
+        // 将获得的经纬度调整为统一格式
+        if (cityLon < 0) {
+            cityLon = -cityLon
+            cityLonChange = "$cityLon°W"
+        } else {
+            cityLonChange = "$cityLon°E"
+        }
+        if (cityLat < 0) {
+            cityLat = -cityLat
+            cityLatChange = "$cityLat°S"
+        } else {
+            cityLatChange = "$cityLat°N"
+        }
+
+        model.addAttribute("city", city)
+        model.addAttribute("time", formattedTime)
+        model.addAttribute("cityId", cityId)
+        model.addAttribute("lon", cityLonChange)
+        model.addAttribute("lat", cityLatChange)
+        model.addAttribute("country", country)
         return "Geography/Geography"
     }
 }

@@ -37,7 +37,7 @@ import kotlin.time.Duration.Companion.seconds
  * @date   2023/6/8 - 16:45
  * @description key: 拥有监听方法的bean, value: list集合，其中的元素pair.first为监听方法，pair.second为监听的事件类型
  */
-class ListenerFunctions: MutableMap<Any, MutableList<Pair<KFunction<*>, KClass<out Event>>>> by mutableMapOf()
+open class ListenerFunctions: MutableMap<Any, MutableList<Pair<KFunction<*>, KClass<out Event>>>> by mutableMapOf()
 
 /**
  * 持续会话
@@ -62,7 +62,7 @@ suspend inline fun  <reified E : Event> E.waitMessage(
  * @date   2023/6/6 - 10:50
  */
 @Configuration
-class MiraiEventListenerConfiguration(
+open class MiraiEventListenerConfiguration(
     val bot: Bot
 ) {
 

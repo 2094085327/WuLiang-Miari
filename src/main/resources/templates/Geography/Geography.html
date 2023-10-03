@@ -9,7 +9,7 @@
     <body>
         <div class="background">
             <div class="head">
-                <div class="city" th:text="${city}">
+                <div class="city" th:text="${country}">
                     兰州
                 </div>
                 <div class="time" th:text="${time}">
@@ -17,17 +17,12 @@
                 </div>
             </div>
 
-            <div class="temperature" th:text="${temp}">
-                23°C 晴
+            <div class="temperature" th:text="${city}">
+                兰州
             </div>
-            <div class="weatherInfo" th:text="${perInfo}">
-                今天白天晴，夜晚多云
-            </div>
-            <div class="carInfo" th:text="${carText}">
-                较适宜洗车，未来一天无雨，风力较小，擦洗一新的汽车至少能保持一天
-            </div>
-            <div class="sportInfo" th:text="${sportText}">
-                天气较好，户外运动请注意防晒，推荐您在室内进行低强度运动
+            <div class="cityId">
+                    <span class="label"> 城市ID:</span>
+                    <span class="label" th:text="${cityId}">10001</span>
             </div>
             <div class="weatherDetail">
                 <div class="weatherInside">
